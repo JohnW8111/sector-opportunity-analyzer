@@ -98,12 +98,13 @@ class SectorScorer:
         Returns:
             List of SectorScore objects, sorted by opportunity score (descending)
         """
-        sector_prices = data.get('sector_prices', {})
-        sector_info = data.get('sector_info', {})
-        macro_data = data.get('macro_data', {})
-        sector_pe = data.get('sector_pe', {})
-        employment_data = data.get('employment_data', {})
-        rd_data = data.get('rd_data', {})
+        # Use 'or {}' to handle explicit None values from data sources
+        sector_prices = data.get('sector_prices') or {}
+        sector_info = data.get('sector_info') or {}
+        macro_data = data.get('macro_data') or {}
+        sector_pe = data.get('sector_pe') or {}
+        employment_data = data.get('employment_data') or {}
+        rd_data = data.get('rd_data') or {}
 
         # Calculate component scores
         momentum_scores = calculate_momentum_score(sector_prices)
@@ -137,9 +138,9 @@ class SectorScorer:
                 self.weights['macro'] * macro
             )
 
-            # Get raw metrics
-            sector_returns = price_returns.get(sector, {})
-            info = sector_info.get(sector, {})
+            # Get raw metrics (use 'or {}' to handle explicit None values)
+            sector_returns = price_returns.get(sector) or {}
+            info = sector_info.get(sector) or {}
 
             score = SectorScore(
                 sector=sector,
