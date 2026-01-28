@@ -5,6 +5,9 @@ A tool for analyzing economic sectors and identifying investment opportunities
 based on momentum, valuation, growth, innovation, and macro factors.
 """
 
+from dotenv import load_dotenv
+load_dotenv()  # Load API keys from .env file
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
