@@ -1,6 +1,6 @@
 # Sector Opportunity Analyzer
 
-A Python-based tool for analyzing economic sectors and identifying investment opportunities over a 2-year horizon. Built with Streamlit for interactive visualization.
+A tool for analyzing economic sectors and identifying investment opportunities over a 2-year horizon. Built with **FastAPI** backend and **React** frontend (Mantine UI + Recharts).
 
 ## Features
 
@@ -11,11 +11,19 @@ A Python-based tool for analyzing economic sectors and identifying investment op
   - Innovation (R&D intensity)
   - Macro sensitivity (interest rate correlation)
 
-- **Interactive dashboard** with:
-  - Sector rankings with opportunity scores
-  - Component score breakdowns
-  - Radar chart comparisons
-  - Detailed sector drill-downs
+- **Modern React dashboard** with:
+  - Top 3 sector opportunity cards
+  - Interactive bar chart rankings (Chart/Table toggle)
+  - Radar chart for sector comparison
+  - Score heatmap across all components
+  - Real-time weight adjustment sliders
+  - Data source status indicators
+
+- **REST API** with endpoints for:
+  - Sector scores with custom weights
+  - Summary reports
+  - Individual sector details
+  - Cache management
 
 - **Smart caching** - 12-hour data cache to minimize API calls
 
@@ -37,15 +45,19 @@ git clone https://github.com/JohnW8111/sector-opportunity-analyzer.git
 cd sector-opportunity-analyzer
 ```
 
-2. Create a virtual environment:
+2. Create a virtual environment and install Python dependencies:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
-3. Install dependencies:
+3. Install frontend dependencies:
 ```bash
-pip install -r requirements.txt
+cd frontend
+npm install
+cd ..
 ```
 
 4. Set up API keys:
@@ -62,39 +74,103 @@ cp .env.example .env
 
 ## Usage
 
-### Run the Streamlit app:
+### Development Mode
+
+**Terminal 1 - Start the backend:**
 ```bash
-streamlit run app.py
+source venv/bin/activate
+uvicorn backend.main:app --reload --port 8000
 ```
 
-### Or load API keys from environment:
+**Terminal 2 - Start the frontend:**
 ```bash
-export FMP_API_KEY=your_key
-export FRED_API_KEY=your_key
-streamlit run app.py
+cd frontend
+npm run dev
+```
+
+Open http://localhost:5173 in your browser.
+
+### API Documentation
+
+With the backend running, visit http://localhost:8000/docs for interactive Swagger documentation.
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/scores` | GET | All sector scores (accepts weight params) |
+| `/api/scores/summary` | GET | Summary with top/bottom sectors |
+| `/api/scores/{sector}` | GET | Single sector details |
+| `/api/data/sectors` | GET | List of sectors |
+| `/api/data/quality` | GET | Data source status |
+| `/api/cache/info` | GET | Cache statistics |
+| `/api/cache/clear` | POST | Clear cache |
+
+### Custom Weights
+
+Pass weight parameters to adjust scoring:
+```bash
+curl "http://localhost:8000/api/scores?momentum=0.4&valuation=0.2&growth=0.2&innovation=0.1&macro=0.1"
 ```
 
 ## Project Structure
 
 ```
 sector-opportunity-analyzer/
-├── app.py                 # Streamlit application
-├── config.py              # Configuration and settings
-├── requirements.txt       # Python dependencies
-├── .env.example           # Environment variable template
+├── backend/
+│   ├── main.py                 # FastAPI application
+│   ├── requirements.txt        # Backend dependencies
+│   └── api/
+│       ├── schemas.py          # Pydantic models
+│       └── routes/
+│           ├── scores.py       # Scoring endpoints
+│           ├── sectors.py      # Data/quality endpoints
+│           └── cache.py        # Cache management
 │
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── src/
+│       ├── App.tsx             # Main application
+│       ├── api/client.ts       # API client
+│       ├── hooks/              # React hooks
+│       ├── types/              # TypeScript types
+│       └── components/
+│           ├── Layout/         # Header, Sidebar
+│           ├── Rankings/       # Cards, BarChart, Table
+│           ├── ScoreBreakdown/ # RadarChart, Heatmap
+│           ├── SectorDetails/  # Drill-down view
+│           └── DataQuality/    # Source status
+│
+├── config.py                   # Configuration and settings
 ├── data/
-│   ├── cache/             # Cached API responses
-│   ├── cache_manager.py   # 12-hour caching logic
-│   └── fetchers.py        # API connectors
+│   ├── cache/                  # Cached API responses
+│   ├── cache_manager.py        # 12-hour caching logic
+│   └── fetchers.py             # API connectors
 │
 ├── analysis/
-│   ├── signals.py         # Signal calculations
-│   └── scoring.py         # Scoring engine
+│   ├── signals.py              # Signal calculations
+│   └── scoring.py              # Scoring engine
 │
-├── reports/               # Report generation (future)
-└── utils/                 # Helper functions
+├── app.py                      # Legacy Streamlit app
+└── .replit                     # Replit deployment config
 ```
+
+## Tech Stack
+
+**Backend:**
+- FastAPI
+- Pydantic v2
+- Uvicorn
+
+**Frontend:**
+- React 18
+- TypeScript
+- Vite
+- Mantine v7 (UI components)
+- Recharts (charts)
+- TanStack Query (data fetching)
+- Axios
 
 ## Scoring Methodology
 
@@ -108,7 +184,16 @@ The opportunity score (0-100) is calculated as a weighted average of five compon
 | Innovation | 20% | R&D intensity (R&D as % of revenue) |
 | Macro | 15% | Interest rate sensitivity |
 
-Weights are adjustable in the sidebar.
+Weights are adjustable via the sidebar sliders or API parameters.
+
+## Deployment (Replit)
+
+The project includes a `.replit` configuration for easy deployment:
+
+```bash
+# Runs both backend and frontend
+./run.sh
+```
 
 ## Future Enhancements
 
