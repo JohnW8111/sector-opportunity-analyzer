@@ -151,7 +151,6 @@ sector-opportunity-analyzer/
 │   ├── signals.py              # Signal calculations
 │   └── scoring.py              # Scoring engine
 │
-├── app.py                      # Legacy Streamlit app
 └── .replit                     # Replit deployment config
 ```
 
