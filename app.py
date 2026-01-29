@@ -139,7 +139,7 @@ try:
     data = load_data()
 except Exception as e:
     st.error(f"Error loading data: {e}")
-    st.info("Please check your API keys in environment variables (FMP_API_KEY, FRED_API_KEY)")
+    st.info("Please check your API keys in environment variables (FRED_API_KEY)")
     st.stop()
 
 # Compute scores
@@ -397,7 +397,6 @@ data_status = {
     'Sector Prices (yfinance)': '✅' if data.get('sector_prices') else '❌',
     'Sector Info (yfinance)': '✅' if data.get('sector_info') else '❌',
     'Macro Data (FRED)': '✅' if data.get('macro_data') else '⚠️ Check FRED_API_KEY',
-    'Sector P/E (FMP)': '✅' if data.get('sector_pe') else '⚠️ Check FMP_API_KEY',
     'Employment (BLS)': '✅' if data.get('employment_data') else '⚠️ Limited without API key',
     'R&D Data (Damodaran)': '✅' if data.get('rd_data') else '❌',
 }

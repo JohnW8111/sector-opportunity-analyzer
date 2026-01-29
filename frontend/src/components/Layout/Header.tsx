@@ -1,11 +1,13 @@
 import { Group, Title, Button, Text } from '@mantine/core';
+import { IconInfoCircle } from '@tabler/icons-react';
 import { useClearCache, useCacheInfo } from '../../hooks/useScores';
 
 interface HeaderProps {
   onRefresh: () => void;
+  onOpenMethodology: () => void;
 }
 
-export function Header({ onRefresh }: HeaderProps) {
+export function Header({ onRefresh, onOpenMethodology }: HeaderProps) {
   const { data: cacheInfo } = useCacheInfo();
   const clearCacheMutation = useClearCache();
 
@@ -19,6 +21,15 @@ export function Header({ onRefresh }: HeaderProps) {
             Cache: {cacheInfo.valid_files} files ({cacheInfo.total_size_mb.toFixed(2)} MB)
           </Text>
         )}
+        <Button
+          variant="light"
+          size="sm"
+          color="blue"
+          leftSection={<IconInfoCircle size={16} />}
+          onClick={onOpenMethodology}
+        >
+          How Scoring Works
+        </Button>
         <Button
           variant="subtle"
           size="sm"

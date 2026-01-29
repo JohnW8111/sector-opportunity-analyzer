@@ -35,10 +35,6 @@ CACHE_DIR = 'data/cache'
 # API KEYS (set via environment variables)
 # =============================================================================
 
-# Financial Modeling Prep - get free key at https://financialmodelingprep.com/
-# Set as environment variable: FMP_API_KEY
-FMP_API_KEY_ENV = 'FMP_API_KEY'
-
 # FRED API - get free key at https://fred.stlouisfed.org/docs/api/api_key.html
 # Set as environment variable: FRED_API_KEY
 FRED_API_KEY_ENV = 'FRED_API_KEY'

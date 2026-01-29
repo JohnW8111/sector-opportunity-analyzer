@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from config import SECTOR_ETFS, FMP_API_KEY_ENV, FRED_API_KEY_ENV, BLS_API_KEY_ENV
+from config import SECTOR_ETFS, FRED_API_KEY_ENV, BLS_API_KEY_ENV
 from backend.api.schemas import (
     DataSourceStatus,
     DataQualityResponse,
@@ -50,21 +50,6 @@ async def get_data_quality():
             name="FRED",
             status="warning",
             message="API key not configured - macro scores may be limited"
-        ))
-
-    # Check FMP API
-    fmp_key = os.environ.get(FMP_API_KEY_ENV)
-    if fmp_key:
-        sources.append(DataSourceStatus(
-            name="Financial Modeling Prep",
-            status="ok",
-            message="Forward P/E ratios"
-        ))
-    else:
-        sources.append(DataSourceStatus(
-            name="Financial Modeling Prep",
-            status="warning",
-            message="API key not configured - valuation data limited"
         ))
 
     # Check BLS API (optional)

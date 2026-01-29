@@ -20,14 +20,18 @@ import { RadarChart } from './components/ScoreBreakdown/RadarChart';
 import { Heatmap } from './components/ScoreBreakdown/Heatmap';
 import { SectorDetails } from './components/SectorDetails/SectorDetails';
 import { DataQuality } from './components/DataQuality/DataQuality';
+import { MethodologyModal, IndicatorInfoModal } from './components/InfoModal';
 import { useScores } from './hooks/useScores';
 import { useWeights } from './hooks/useWeights';
+import { INDICATORS } from './constants/indicators';
 
 function App() {
   const { weights, normalizedWeights, updateWeight, resetWeights, totalWeight } = useWeights();
   const { data, isLoading, error, refetch } = useScores(normalizedWeights);
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
+  const [methodologyOpen, setMethodologyOpen] = useState(false);
+  const [selectedIndicator, setSelectedIndicator] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -59,7 +63,7 @@ function App() {
       padding="md"
     >
       <AppShell.Header>
-        <Header onRefresh={() => refetch()} />
+        <Header onRefresh={() => refetch()} onOpenMethodology={() => setMethodologyOpen(true)} />
       </AppShell.Header>
 
       <AppShell.Navbar p="md">
@@ -101,7 +105,11 @@ function App() {
                 {viewMode === 'chart' ? (
                   <RankingsBarChart scores={scores} onSelectSector={setSelectedSector} />
                 ) : (
-                  <RankingsTable scores={scores} onSelectSector={setSelectedSector} />
+                  <RankingsTable
+                    scores={scores}
+                    onSelectSector={setSelectedSector}
+                    onOpenIndicatorInfo={setSelectedIndicator}
+                  />
                 )}
               </Paper>
             </section>
@@ -145,6 +153,17 @@ function App() {
           </Stack>
         </Container>
       </AppShell.Main>
+
+      {/* Info Modals */}
+      <MethodologyModal
+        opened={methodologyOpen}
+        onClose={() => setMethodologyOpen(false)}
+      />
+      <IndicatorInfoModal
+        opened={selectedIndicator !== null}
+        onClose={() => setSelectedIndicator(null)}
+        indicator={selectedIndicator ? INDICATORS[selectedIndicator] : null}
+      />
     </AppShell>
   );
 }

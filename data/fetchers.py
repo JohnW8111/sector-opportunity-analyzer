@@ -1,5 +1,5 @@
 """
-Data fetchers for various sources: yfinance, FRED, FMP, BLS, Damodaran.
+Data fetchers for various sources: yfinance, FRED, BLS, Damodaran.
 All fetchers use the cache_manager for 12-hour caching.
 """
 
@@ -13,7 +13,7 @@ from data.cache_manager import get_cached_data, save_to_cache
 from config import (
     SECTOR_ETFS, MARKET_BENCHMARK, FRED_SERIES,
     BLS_EMPLOYMENT_SERIES, DAMODARAN_RD_URL, DAMODARAN_TO_GICS,
-    FMP_API_KEY_ENV, FRED_API_KEY_ENV, BLS_API_KEY_ENV,
+    FRED_API_KEY_ENV, BLS_API_KEY_ENV,
     MOMENTUM_PERIODS, MACRO_SENSITIVITY_YEARS, PE_HISTORICAL_YEARS
 )
 
@@ -176,195 +176,6 @@ def fetch_macro_data(years_back: int = 5) -> Dict[str, pd.Series]:
             macro_data[name] = data
 
     return macro_data
-
-
-# =============================================================================
-# FINANCIAL MODELING PREP FETCHERS (Sector P/E data)
-# =============================================================================
-
-def fetch_sector_pe_fmp() -> Optional[Dict[str, float]]:
-    """
-    Fetch sector P/E ratios from Financial Modeling Prep.
-    Tries v3 endpoints first, then falls back to v4 if needed.
-
-    Returns:
-        Dictionary mapping sector names to P/E ratios
-    """
-    import requests
-
-    api_key = os.environ.get(FMP_API_KEY_ENV)
-    if not api_key:
-        print(f"Warning: {FMP_API_KEY_ENV} not set. FMP data unavailable.")
-        return None
-
-    cache_params = {'type': 'sector_pe_v3'}
-    cached = get_cached_data('fmp', cache_params)
-    if cached is not None:
-        return cached
-
-    # Map FMP sector names to our GICS names
-    fmp_to_gics = {
-        'Technology': 'Information Technology',
-        'Financial Services': 'Financials',
-        'Energy': 'Energy',
-        'Healthcare': 'Health Care',
-        'Consumer Cyclical': 'Consumer Discretionary',
-        'Consumer Defensive': 'Consumer Staples',
-        'Industrials': 'Industrials',
-        'Basic Materials': 'Materials',
-        'Utilities': 'Utilities',
-        'Real Estate': 'Real Estate',
-        'Communication Services': 'Communication Services',
-    }
-
-    sector_pe = {}
-
-    # Try v3 sector-performance endpoint first (more likely to be free)
-    try:
-        url = "https://financialmodelingprep.com/api/v3/sectors-performance"
-        params = {'apikey': api_key}
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-
-        data = response.json()
-        print(f"FMP v3 sectors-performance returned: {len(data)} sectors")
-
-        # Note: This endpoint returns performance, not P/E
-        # We'll use it to confirm API access works, but need different endpoint for P/E
-
-    except Exception as e:
-        print(f"FMP v3 sectors-performance failed: {e}")
-
-    # Try v4 sector P/E endpoint
-    try:
-        url = "https://financialmodelingprep.com/api/v4/sector_price_earning_ratio"
-        params = {'date': datetime.now().strftime('%Y-%m-%d'), 'exchange': 'NYSE', 'apikey': api_key}
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-
-        data = response.json()
-
-        for item in data:
-            fmp_sector = item.get('sector')
-            gics_sector = fmp_to_gics.get(fmp_sector, fmp_sector)
-            if gics_sector in SECTOR_ETFS:
-                sector_pe[gics_sector] = item.get('pe')
-
-        if sector_pe:
-            save_to_cache('fmp', cache_params, sector_pe)
-            return sector_pe
-
-    except Exception as e:
-        print(f"Error fetching FMP v4 sector P/E: {e}")
-
-    # If we got here, return None (no P/E data available from FMP)
-    print("FMP sector P/E not available - will use yfinance fallback")
-    return None
-
-
-def fetch_sector_performance_fmp() -> Optional[Dict[str, dict]]:
-    """
-    Fetch sector performance data from FMP v3 endpoint.
-
-    Returns:
-        Dictionary mapping sector names to performance data
-    """
-    import requests
-
-    api_key = os.environ.get(FMP_API_KEY_ENV)
-    if not api_key:
-        return None
-
-    cache_params = {'type': 'sector_performance_v3'}
-    cached = get_cached_data('fmp', cache_params)
-    if cached is not None:
-        return cached
-
-    fmp_to_gics = {
-        'Technology': 'Information Technology',
-        'Financial Services': 'Financials',
-        'Energy': 'Energy',
-        'Healthcare': 'Health Care',
-        'Consumer Cyclical': 'Consumer Discretionary',
-        'Consumer Defensive': 'Consumer Staples',
-        'Industrials': 'Industrials',
-        'Basic Materials': 'Materials',
-        'Utilities': 'Utilities',
-        'Real Estate': 'Real Estate',
-        'Communication Services': 'Communication Services',
-    }
-
-    try:
-        url = "https://financialmodelingprep.com/api/v3/sectors-performance"
-        params = {'apikey': api_key}
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-
-        data = response.json()
-        sector_perf = {}
-
-        for item in data:
-            fmp_sector = item.get('sector')
-            gics_sector = fmp_to_gics.get(fmp_sector, fmp_sector)
-            if gics_sector in SECTOR_ETFS:
-                # Parse the percentage string (e.g., "2.5%" -> 2.5)
-                change_str = item.get('changesPercentage', '0%')
-                try:
-                    change = float(change_str.replace('%', ''))
-                except:
-                    change = 0.0
-                sector_perf[gics_sector] = {
-                    'changesPercentage': change,
-                }
-
-        if sector_perf:
-            save_to_cache('fmp', cache_params, sector_perf)
-            print(f"FMP v3 sector performance: Retrieved {len(sector_perf)} sectors")
-            return sector_perf
-
-    except Exception as e:
-        print(f"Error fetching FMP v3 sector performance: {e}")
-
-    return None
-
-
-def fetch_historical_sector_pe_fmp(years_back: int = 5) -> Optional[Dict[str, List[dict]]]:
-    """
-    Fetch historical sector P/E ratios from FMP.
-
-    Args:
-        years_back: Number of years of historical data
-
-    Returns:
-        Dictionary mapping sector names to lists of historical P/E data
-    """
-    import requests
-
-    api_key = os.environ.get(FMP_API_KEY_ENV)
-    if not api_key:
-        return None
-
-    cache_params = {'type': 'historical_sector_pe', 'years': years_back}
-    cached = get_cached_data('fmp', cache_params)
-    if cached is not None:
-        return cached
-
-    try:
-        url = f"https://financialmodelingprep.com/api/v4/sector_price_earning_ratio"
-        params = {'apikey': api_key}
-
-        # FMP may require different endpoint for historical - adjust as needed
-        # This is a simplified version; actual implementation may vary
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-
-        data = response.json()
-        save_to_cache('fmp', cache_params, data)
-        return data
-
-    except Exception as e:
-        print(f"Error fetching historical FMP P/E: {e}")
-        return None
 
 
 # =============================================================================
@@ -547,9 +358,6 @@ def fetch_all_data() -> dict:
     print("Fetching macro data from FRED...")
     macro_data = fetch_macro_data()
 
-    print("Fetching sector P/E from FMP...")
-    sector_pe = fetch_sector_pe_fmp()
-
     print("Fetching employment data from BLS...")
     employment_data = fetch_bls_employment()
 
@@ -560,7 +368,6 @@ def fetch_all_data() -> dict:
         'sector_prices': sector_prices,
         'sector_info': sector_info,
         'macro_data': macro_data,
-        'sector_pe': sector_pe,
         'employment_data': employment_data,
         'rd_data': rd_data,
     }

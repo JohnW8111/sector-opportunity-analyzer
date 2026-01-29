@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from backend.api.routes import scores, sectors, cache
+from backend.api.routes import scores, sectors, cache, docs
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +38,7 @@ app.add_middleware(
 app.include_router(scores.router)
 app.include_router(sectors.router)
 app.include_router(cache.router)
+app.include_router(docs.router)
 
 
 @app.get("/")

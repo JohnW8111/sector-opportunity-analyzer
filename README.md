@@ -32,7 +32,7 @@ A tool for analyzing economic sectors and identifying investment opportunities o
 | Signal | Source | API Key Required |
 |--------|--------|------------------|
 | Sector prices & returns | yfinance (Yahoo Finance) | No |
-| Sector P/E ratios | Financial Modeling Prep | Yes (free tier) |
+| Sector P/E ratios | yfinance (Yahoo Finance) | No |
 | Macro data (rates, inflation) | FRED | Yes (free) |
 | Employment by sector | BLS | Optional |
 | R&D intensity | Damodaran (NYU) | No |
@@ -68,7 +68,6 @@ cp .env.example .env
 
 ### Getting API Keys
 
-- **FMP (Financial Modeling Prep)**: https://financialmodelingprep.com/developer/docs/ (free tier: 250 calls/day)
 - **FRED**: https://fred.stlouisfed.org/docs/api/api_key.html (free)
 - **BLS**: https://data.bls.gov/registrationEngine/ (optional, improves rate limits)
 
