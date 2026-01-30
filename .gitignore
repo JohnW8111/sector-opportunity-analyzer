@@ -27,3 +27,6 @@ data/cache/
 
 # OS files
 .DS_Store
+.claude-user
+**/.claude-user
+**/.*.claude-user
