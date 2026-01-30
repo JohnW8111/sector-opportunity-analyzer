@@ -10,6 +10,11 @@ from scipy import stats
 
 from config import SECTOR_ETFS, MOMENTUM_PERIODS
 
+# Pandas 2.2+ changed 'M' to 'ME' for month-end frequency
+# Detect version and use appropriate string for compatibility
+_pandas_version = tuple(int(x) for x in pd.__version__.split('.')[:2])
+MONTH_END_FREQ = 'ME' if _pandas_version >= (2, 2) else 'M'
+
 
 def normalize_score(values: Dict[str, float], higher_is_better: bool = True) -> Dict[str, float]:
     """
@@ -386,10 +391,18 @@ def calculate_rate_sensitivity(
     if interest_rates is None or interest_rates.empty:
         return {}
 
+    # Ensure we have a DatetimeIndex for resampling
+    if not isinstance(interest_rates.index, pd.DatetimeIndex):
+        try:
+            interest_rates = interest_rates.copy()
+            interest_rates.index = pd.to_datetime(interest_rates.index)
+        except Exception:
+            return {}  # Can't resample without datetime index
+
     sensitivities = {}
 
     # Resample rates to monthly for correlation with returns
-    rates_monthly = interest_rates.resample('ME').last()
+    rates_monthly = interest_rates.resample(MONTH_END_FREQ).last()
     rate_changes = rates_monthly.pct_change().dropna()
 
     for sector, df in sector_prices.items():
@@ -400,8 +413,16 @@ def calculate_rate_sensitivity(
         if close is None:
             continue
 
+        # Ensure we have a DatetimeIndex for resampling
+        if not isinstance(close.index, pd.DatetimeIndex):
+            try:
+                close = close.copy()
+                close.index = pd.to_datetime(close.index)
+            except Exception:
+                continue  # Skip this sector if we can't convert
+
         # Calculate monthly returns
-        close_monthly = close.resample('ME').last()
+        close_monthly = close.resample(MONTH_END_FREQ).last()
         returns = close_monthly.pct_change().dropna()
 
         # Align dates
