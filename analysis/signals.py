@@ -389,7 +389,7 @@ def calculate_rate_sensitivity(
     sensitivities = {}
 
     # Resample rates to monthly for correlation with returns
-    rates_monthly = interest_rates.resample('M').last()
+    rates_monthly = interest_rates.resample('ME').last()
     rate_changes = rates_monthly.pct_change().dropna()
 
     for sector, df in sector_prices.items():
@@ -401,7 +401,7 @@ def calculate_rate_sensitivity(
             continue
 
         # Calculate monthly returns
-        close_monthly = close.resample('M').last()
+        close_monthly = close.resample('ME').last()
         returns = close_monthly.pct_change().dropna()
 
         # Align dates
