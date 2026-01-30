@@ -8,6 +8,7 @@ packages = ["glibcLocales", "libxcrypt", "pkg-config", "xsimd"]
 
 [deployment]
 run = ["bash", "run.sh"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 5173
@@ -20,3 +21,6 @@ externalPort = 3000
 [[ports]]
 localPort = 8000
 externalPort = 8000
+
+[agent]
+expertMode = true
