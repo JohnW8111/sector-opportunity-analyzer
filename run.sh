@@ -1,24 +1,42 @@
 #!/bin/bash
+set -e
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+echo "Starting Sector Opportunity Analyzer..."
+echo "Working directory: $(pwd)"
 
 # Install backend dependencies
+echo "Installing backend dependencies..."
 pip install -r backend/requirements.txt
 
+# Install frontend dependencies first
+echo "Installing frontend dependencies..."
+cd frontend
+npm install
+cd ..
+
 # Start backend in background
+echo "Starting backend on port 8000..."
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
-# Give backend time to start
-sleep 3
+# Wait for backend to be ready
+echo "Waiting for backend to start..."
+sleep 5
 
-# Install and start frontend
+# Verify backend is running
+if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+    echo "Backend is healthy!"
+else
+    echo "Warning: Backend health check failed, continuing anyway..."
+fi
+
+# Start frontend
+echo "Starting frontend on port 5173..."
 cd frontend
-npm install
 npm run dev -- --host 0.0.0.0 &
 FRONTEND_PID=$!
+
+echo "Both services started. Backend PID: $BACKEND_PID, Frontend PID: $FRONTEND_PID"
 
 # Wait for both processes
 wait $BACKEND_PID $FRONTEND_PID
