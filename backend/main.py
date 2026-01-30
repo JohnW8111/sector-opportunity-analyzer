@@ -1,9 +1,11 @@
 """FastAPI application entry point."""
+import os
 import sys
 from pathlib import Path
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,8 +13,8 @@ from dotenv import load_dotenv
 
 from backend.api.routes import scores, sectors, cache, docs
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from project root .env file
+load_dotenv(PROJECT_ROOT / ".env")
 
 app = FastAPI(
     title="Sector Opportunity Analyzer API",
@@ -20,15 +22,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configure CORS for frontend
+# Configure CORS for frontend (allow all origins in production for Replit)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=["*"],  # Allow all origins for Replit deployment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
