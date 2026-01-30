@@ -4,14 +4,19 @@ modules = ["python-3.12", "nodejs-20", "bash", "web"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["glibcLocales", "libxcrypt", "pkg-config", "xsimd"]
 
 [deployment]
 run = ["bash", "run.sh"]
 
 [[ports]]
-localPort = 8000
-externalPort = 8000
-
-[[ports]]
 localPort = 5173
 externalPort = 80
+
+[[ports]]
+localPort = 5174
+externalPort = 3000
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
