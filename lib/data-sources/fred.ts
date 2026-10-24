@@ -18,7 +18,7 @@ export async function fetchFREDSeries(
 
   const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&observation_start=${start}`;
 
-  const resp = await fetch(url);
+  const resp = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   if (!resp.ok) {
     throw new Error(`FRED API returned ${resp.status} for ${seriesId}`);
   }

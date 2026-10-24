@@ -63,4 +63,20 @@ export const FRED_SERIES: Record<string, string> = {
   gdp: "GDP",
 };
 
+// FRED republishes these identical seasonally adjusted BLS CES series.
+// Aggregate series use FRED aliases; the FRED notes list the original CES code.
+export const FRED_EMPLOYMENT_SERIES: Record<string, string> = {
+  CES6000000001: "USPBS",
+  CES5500000001: "USFIRE",
+  CES1021000001: "CES1021000001",
+  CES6562000001: "CES6562000001",
+  CES4200000001: "USTRADE",
+  CES3100000001: "DMANEMP",
+  CES3000000001: "MANEMP",
+  CES1021200001: "CES1021200001",
+  CES4422000001: "CES4422000001",
+  CES5553000001: "CES5553000001",
+  CES5000000001: "USINFO",
+};
+
 export const REVALIDATE_SECONDS = 43200; // 12 hours

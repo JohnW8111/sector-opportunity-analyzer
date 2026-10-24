@@ -16,7 +16,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
 } from "recharts";
-import type { SectorScore } from "@/lib/types";
+import type { DataQualityResult, SectorScore } from "@/lib/types";
 import { DEFAULT_WEIGHTS } from "@/lib/config";
 
 function barColor(score: number): string {
@@ -44,10 +44,10 @@ function heatText(score: number): string {
 
 interface DashboardProps {
   initialScores: SectorScore[];
-  allData: string; // serialized AllData for client-side recalc
+  employmentQuality: DataQualityResult;
 }
 
-export default function Dashboard({ initialScores }: DashboardProps) {
+export default function Dashboard({ initialScores, employmentQuality }: DashboardProps) {
   const [weights, setWeights] = useState({ ...DEFAULT_WEIGHTS });
   const [view, setView] = useState<"chart" | "table">("chart");
   const [compareSelections, setCompareSelections] = useState<string[]>([]);
@@ -158,6 +158,19 @@ export default function Dashboard({ initialScores }: DashboardProps) {
             Refresh Data
           </button>
         </div>
+      </div>
+
+      <div
+        role={employmentQuality.status === "pass" ? "status" : "alert"}
+        style={{
+          padding: "10px 24px",
+          fontSize: "13px",
+          background: employmentQuality.status === "pass" ? "#f3f4f6" : "#fef3c7",
+          color: employmentQuality.status === "pass" ? "#4b5563" : "#92400e",
+        }}
+      >
+        Employment data: {employmentQuality.message}{" "}
+        <a href="/api/data/quality" style={{ textDecoration: "underline" }}>Data source details</a>
       </div>
 
       <div style={{ display: "flex", maxWidth: "1600px", margin: "0 auto" }}>
