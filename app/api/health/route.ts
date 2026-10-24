@@ -4,6 +4,6 @@ export async function GET() {
   return NextResponse.json({
     status: "ok",
     version: "2.0.0",
-    platform: "vercel-nextjs",
+    platform: process.env.RENDER ? "render-nextjs" : "nextjs",
   });
 }
