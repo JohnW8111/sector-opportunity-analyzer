@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchAllData } from "@/lib/fetch-all-data";
-import { SECTOR_NAMES } from "@/lib/config";
+import { getEmploymentQuality } from "@/lib/employment-quality";
 import type { DataQualityResult } from "@/lib/types";
 
 export async function GET() {
@@ -47,17 +47,7 @@ export async function GET() {
     });
 
     // BLS Employment
-    const blsCount = Object.keys(allData.employmentData).length;
-    const blsMonths = Object.values(allData.employmentData).map(
-      (ts) => ts.values.length
-    );
-    const minMonths = blsMonths.length > 0 ? Math.min(...blsMonths) : 0;
-    results.push({
-      source: "BLS Employment",
-      status: blsCount >= 8 && minMonths >= 13 ? "pass" : "fail",
-      message: `${blsCount} sectors, min ${minMonths} months`,
-      details: { sectors: blsCount, minMonths },
-    });
+    results.push(getEmploymentQuality(allData.employmentData));
 
     // R&D Data
     const rdCount = Object.values(allData.rdData).filter((v) => v > 0).length;

@@ -18,7 +18,12 @@ export interface TimeSeries {
 }
 
 export type MacroData = Record<string, TimeSeries>;
-export type EmploymentData = Record<string, TimeSeries>;
+export interface EmploymentSeries extends TimeSeries {
+  source: "bls" | "fred";
+  seriesId: string;
+}
+
+export type EmploymentData = Record<string, EmploymentSeries>;
 export type RDData = Record<string, number>;
 
 export interface AllData {

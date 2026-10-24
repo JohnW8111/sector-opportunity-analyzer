@@ -10,7 +10,7 @@ This is a TypeScript rewrite of the [Go-based sector analyzer](https://github.co
 |--------|--------|-------------|--------|
 | **Momentum** | 25% | Yahoo Finance | 12-month returns (50%), relative strength vs SPY (35%), volume trend (15%) |
 | **Valuation** | 20% | Yahoo Finance | Forward P/E — lower P/E = higher score |
-| **Growth** | 20% | BLS | Year-over-year employment change by sector |
+| **Growth** | 20% | BLS, with FRED fallback | Year-over-year employment change by sector |
 | **Innovation** | 20% | Damodaran (hardcoded) | R&D intensity as % of revenue |
 | **Macro** | 15% | FRED + Yahoo Finance | Correlation of sector returns with 10Y Treasury yield changes — lower correlation = more resilient |
 
@@ -30,9 +30,15 @@ Scores are normalized to 0–100 using z-score normalization and combined with c
 | Source | What | Auth |
 |--------|------|------|
 | **Yahoo Finance** | 5yr daily prices, P/E ratios (cookie/crumb auth) | None required |
-| **FRED** | 10Y Treasury, 2Y Treasury, Fed Funds, CPI, GDP | API key (free) |
+| **FRED** | 10Y Treasury, 2Y Treasury, Fed Funds, CPI, GDP; identical BLS employment series when BLS is unavailable | API key (free) |
 | **BLS** | Sector employment by NAICS classification | API key (optional, higher rate limits) |
 | **Damodaran** | R&D intensity by industry | Hardcoded averages |
+
+Employment requests time out after 10 seconds. If BLS fails or omits a sector's history, the app requests the same seasonally adjusted CES series from FRED using the existing FRED key. FRED aliases are mapped to their original BLS source codes in `lib/config.ts`; the existing industry proxies and scoring weights are unchanged. For example, [USPBS](https://fred.stlouisfed.org/series/USPBS) identifies its source as `CES6000000001`.
+
+The dashboard identifies the employment data provider and warns if any sector has fewer than 13 observations or data more than three calendar months old. `/api/data/quality` includes each sector's provider, series ID, observation count, and latest observation date. If both sources fail, affected growth scores fall back to 50 with a visible warning.
+
+Run the employment fallback regression tests with `npm test`.
 
 ## Sector ETF Mappings
 
