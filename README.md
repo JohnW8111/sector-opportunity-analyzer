@@ -2,7 +2,7 @@
 
 A Next.js web application that calculates opportunity scores for the 11 GICS sectors using five signal dimensions: momentum, valuation, growth, innovation, and macro sensitivity.
 
-This is a TypeScript rewrite of the [Go-based sector analyzer](https://github.com/JohnW8111/sector-opportunity-analyzer-go), rebuilt for deployment on Vercel.
+This is a TypeScript rewrite of the [Go-based sector analyzer](https://github.com/JohnW8111/sector-opportunity-analyzer-go), deployed as a Node web service on Render.
 
 ## Signals
 
@@ -56,7 +56,7 @@ Benchmark: SPY (S&P 500)
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24 (selected by `.node-version`)
 - FRED API key (free at https://fred.stlouisfed.org/docs/api/api_key.html)
 - BLS API key (optional, from https://www.bls.gov/developers/)
 
@@ -66,9 +66,8 @@ Benchmark: SPY (S&P 500)
 # Install dependencies
 npm install
 
-# Create environment file
-cp .env.local.example .env.local
-# Edit .env.local and add your FRED_API_KEY
+# Create .env.local with your FRED_API_KEY (see below).
+# Add BLS_API_KEY if you have a registered BLS key.
 
 # Run dev server
 npm run dev
@@ -83,12 +82,27 @@ FRED_API_KEY=your_fred_api_key_here
 BLS_API_KEY=your_bls_api_key_here   # optional
 ```
 
-## Deploy to Vercel
+## Deploy to Render
 
-1. Push to GitHub
-2. Import the repo in [Vercel](https://vercel.com)
-3. Add environment variables: `FRED_API_KEY` and optionally `BLS_API_KEY`
-4. Deploy
+1. Create a **Node web service** from this GitHub repository in Render, using `main`.
+2. Select the **Free** compute plan and Oregon region.
+3. Build command: `npm ci --include=dev && npm run build`.
+4. Start command: `npm start`. The server binds to `0.0.0.0` and uses Render's `PORT` environment variable (normally `10000`).
+5. Set `FRED_API_KEY` and, if available, `BLS_API_KEY` in the service's private environment variables **before building**. Never commit their values.
+6. Set the HTTP health-check path to `/api/health` in **Settings > Health Checks**.
+7. Enable automatic deployment on commits to `main`.
+
+For a local production check, run `npm run build` followed by `PORT=10000 npm start`. The health endpoint checks the application server without contacting external data providers. Google Fonts and upstream data requests require network access during the build.
+
+No database, persistent disk, or stored history needs migration. Caches are per instance and reset after a restart, sleep, or redeploy. A free service sleeps when idle and wakes on the next request.
+
+### Domain cutover
+
+Verify the assigned `onrender.com` address first: check the dashboard, `/api/health`, `/api/scores`, and `/api/data/quality`. The quality endpoint can return HTTP 200 while an upstream data source is failing, so inspect each source's status and compare it with the existing deployment.
+
+Use the assigned `onrender.com` URL as the production address. This deployment uses the free Render address because the workspace's two included custom domains are already in use. An existing address such as `sector.johnw8111.us` can redirect visitors to the Render URL through Cloudflare without adding a third custom domain to Render. Verify the redirect and target dashboard before retiring Vercel. Leave unrelated DNS and Vercel projects unchanged.
+
+References: [Render web services](https://render.com/docs/web-services), [Node versions](https://render.com/docs/node-version), [health checks](https://render.com/docs/health-checks), and [Cloudflare DNS](https://render.com/docs/configure-cloudflare-dns).
 
 The dashboard page uses ISR with a 12-hour revalidation window. Data is cached in-memory for 10 minutes to avoid redundant API calls across routes.
 
